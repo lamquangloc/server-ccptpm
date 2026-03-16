@@ -68,6 +68,7 @@ server-ccptpm/
   - `email`: Email (string, required, unique)
   - `password`: Mật khẩu (string, required, hashed với bcrypt)
   - `role`: Vai trò ('admin' hoặc 'user', default: 'user')
+  - `phone`: Số điện thoại (string, optional)
   - `createdAt`: Thời gian tạo (Date)
   - `updatedAt`: Thời gian cập nhật (Date)
 - **Methods**:
@@ -111,6 +112,7 @@ server-ccptpm/
   - `user`: Người dùng đặt hàng (ObjectId, ref: 'User', required)
   - `table`: Bàn được đặt (ObjectId, ref: 'Table', required)
   - `products`: Danh sách món với số lượng (array of {product: ObjectId, quantity: number})
+  - `phone`: Số điện thoại người đặt (string, required)
   - `total`: Tổng tiền (number, required)
   - `status`: Trạng thái ('pending', 'confirm', 'cancel', 'complete', default: 'pending')
   - `createdAt`: Thời gian tạo (Date)

@@ -26,8 +26,8 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
 
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, email, role } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { name, email, role }, { new: true }).select('-password');
+    const { name, email, role, phone } = req.body;
+    const user = await User.findByIdAndUpdate(req.params.id, { name, email, role, phone }, { new: true }).select('-password');
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
