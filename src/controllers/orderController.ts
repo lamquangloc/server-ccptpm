@@ -67,8 +67,8 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
       return;
     }
 
-    // If order is paid, free the table
-    if (status === 'paid') {
+    // If order is complete or cancel, free the table
+    if (status === 'complete' || status === 'cancel') {
       await Table.findByIdAndUpdate(order.table, { status: 'available' });
     }
 

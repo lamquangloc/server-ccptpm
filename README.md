@@ -3,6 +3,21 @@
 ## Tổng quan
 Phần backend của dự án nhà hàng đặt bàn sử dụng TypeScript, Express.js, và MongoDB Atlas. Phần database bao gồm các collection chính sau.
 
+## Phân công công việc & Danh sách Branch
+Dưới đây là bảng phân công nhiệm vụ và tên nhánh dự kiến cho mỗi thành viên của nhóm 7 người. Các nhánh sẽ được tạo checkout từ nhánh `develop`.
+
+Quy ước đặt tên branch: `feat/<tên-viết-tắt>-<nghiệp-vụ>`.
+
+| STT | Thành viên | Vai trò | Phân công công việc (Backend & API) | Tên Branch Đề Xuất |
+|:---:|:---|:---|:---|:---|
+| 1 | **Lâm Quang Lộc** | Nhóm trưởng | Trang menu, Trang chi tiết món (Products) | `feat/loc-menu-product, main, develop` |
+| 2 | **Nguyễn Hữu Tịnh** | Thành viên | Quản lý người dùng (Users) | `feat/tinh-manage-users` |
+| 3 | **Đào Nhật Cường** | Thành viên | Đăng nhập, đăng kí, quên mật khẩu, dashboard admin (Auth) | `feat/cuong-auth-dashboard` |
+| 4 | **Hoàng Gia Bảo** | Thành viên | Quản lý bàn (Tables) | `feat/bao-manage-tables` |
+| 5 | **Phạm Tùng Dương** | Thành viên | Profile cá nhân và lịch sử đặt bàn (Profile/Order Tracking) | `feat/duong-user-profile` |
+| 6 | **Huỳnh Trung Hậu** | Thành viên | Đặt bàn (Booking), Quản lý đơn hàng (Orders) | `feat/hau-booking` |
+| 7 | **Phạm Thanh Tuấn** | Thành viên | Trang chủ (Home APIs) | `feat/tuan-homepage` |
+
 ## Cấu trúc Project
 ```
 server-ccptpm/
@@ -97,7 +112,7 @@ server-ccptpm/
   - `table`: Bàn được đặt (ObjectId, ref: 'Table', required)
   - `products`: Danh sách món với số lượng (array of {product: ObjectId, quantity: number})
   - `total`: Tổng tiền (number, required)
-  - `status`: Trạng thái ('pending', 'confirmed', 'preparing', 'served', 'paid', default: 'pending')
+  - `status`: Trạng thái ('pending', 'confirm', 'cancel', 'complete', default: 'pending')
   - `createdAt`: Thời gian tạo (Date)
   - `updatedAt`: Thời gian cập nhật (Date)
 
@@ -170,18 +185,3 @@ server-ccptpm/
   - `POST /api/categories` - Upload ảnh category (form-data: image) → lưu vào `uploads/categories/`
   - `PUT /api/categories/:id` - Upload ảnh category (form-data: image) → lưu vào `uploads/categories/`
 - **Truy cập file**: `/uploads/avatars/filename`, `/uploads/products/filename`, `/uploads/categories/filename`
-
-## Phân công công việc & Danh sách Branch
-Dưới đây là bảng phân công nhiệm vụ và tên nhánh dự kiến cho mỗi thành viên của nhóm 7 người. Các nhánh sẽ được tạo checkout từ nhánh `develop`.
-
-Quy ước đặt tên branch: `feat/<tên-viết-tắt>-<nghiệp-vụ>`.
-
-| STT | Thành viên | Vai trò | Phân công công việc (Backend & API) | Tên Branch Đề Xuất |
-|:---:|:---|:---|:---|:---|
-| 1 | **Lâm Quang Lộc** | Nhóm trưởng | Trang menu, Trang chi tiết món (Products) | `feat/loc-menu-product, main, develop` |
-| 2 | **Nguyễn Hữu Tịnh** | Thành viên | Quản lý người dùng (Users) | `feat/tinh-manage-users` |
-| 3 | **Đào Nhật Cường** | Thành viên | Đăng nhập, đăng kí, quên mật khẩu, dashboard admin (Auth) | `feat/cuong-auth-dashboard` |
-| 4 | **Hoàng Gia Bảo** | Thành viên | Quản lý bàn (Tables) | `feat/bao-manage-tables` |
-| 5 | **Phạm Tùng Dương** | Thành viên | Profile cá nhân và lịch sử đặt bàn (Profile/Order Tracking) | `feat/duong-user-profile` |
-| 6 | **Huỳnh Trung Hậu** | Thành viên | Đặt bàn (Booking) | `feat/hau-booking` |
-| 7 | **Phạm Thanh Tuấn** | Thành viên | Trang chủ (Home APIs) | `feat/tuan-homepage` |

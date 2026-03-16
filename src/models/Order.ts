@@ -8,7 +8,7 @@ export interface IOrder extends Document {
     quantity: number;
   }[];
   total: number;
-  status: 'pending' | 'confirmed' | 'preparing' | 'served' | 'paid';
+  status: 'pending' | 'confirm' | 'cancel' | 'complete';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,7 +21,7 @@ const OrderSchema: Schema = new Schema({
     quantity: { type: Number, required: true },
   }],
   total: { type: Number, required: true },
-  status: { type: String, enum: ['pending', 'confirmed', 'preparing', 'served', 'paid'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'confirm', 'cancel', 'complete'], default: 'pending' },
 }, {
   timestamps: true,
 });
