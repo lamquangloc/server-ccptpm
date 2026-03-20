@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import dns from 'dns';
+
+// Fix for MongoDB SRV connection issues on some networks/Windows
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
 const connectDB = async (): Promise<void> => {
   try {
