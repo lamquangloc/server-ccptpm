@@ -5,7 +5,7 @@ import { AuthRequest } from '../middlewares/auth';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -13,7 +13,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = new User({ name, email, password, role });
+    const user = new User({ name, email, password, role, phone });
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1d' });
@@ -59,10 +59,11 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
 
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name } = req.body;
+    const { name, phone } = req.body;
     const avatar = req.file ? `/uploads/${req.file.filename}` : undefined;
 
     const updateData: any = { name };
+    if (phone) updateData.phone = phone;
     if (avatar) updateData.avatar = avatar;
 
     const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
