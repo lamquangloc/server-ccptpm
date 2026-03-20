@@ -4,8 +4,42 @@ import { AuthRequest } from '../middlewares/auth';
 
 export const getAllUsers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    const query: any = {};
+
+    // Filter by role
+    if (req.query.role) {
+      query.role = req.query.role;
+    }
+
+    // Search by name or email
+    if (req.query.search) {
+      const searchRegex = new RegExp(req.query.search as string, 'i');
+      query.$or = [
+        { name: searchRegex },
+        { email: searchRegex }
+      ];
+    }
+
+    const totalUsers = await User.countDocuments(query);
+    const users = await User.find(query)
+      .select('-password')
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // Sort by newest first
+
+    res.json({
+      users,
+      pagination: {
+        total: totalUsers,
+        page,
+        limit,
+        pages: Math.ceil(totalUsers / limit)
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -26,8 +60,13 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
 
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, email, role } = req.body;
-    const user = await User.findByIdAndUpdate(req.params.id, { name, email, role }, { new: true }).select('-password');
+    const { name, email, role, phone } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id, 
+      { name, email, role, phone }, 
+      { new: true, runValidators: true }
+    ).select('-password');
+    
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
