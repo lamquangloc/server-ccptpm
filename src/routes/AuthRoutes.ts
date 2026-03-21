@@ -1,5 +1,6 @@
 import express from 'express';
-import { register, login, getProfile, forgotPassword, updateProfile } from '../controllers/authController';
+import { register, login, forgotPassword } from '../controllers/authController';
+import { getProfile, updateProfile } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/auth';
 import { uploadAvatar } from '../middlewares/upload';
 

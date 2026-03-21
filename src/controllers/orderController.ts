@@ -27,7 +27,14 @@ export const getOrderById = async (req: AuthRequest, res: Response): Promise<voi
 
 export const getUserOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate('table').populate('products.product');
+    if (!req.user) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+    const orders = await Order.find({ user: req.user._id })
+      .populate('table')
+      .populate('products.product')
+      .sort({ createdAt: -1 }); // Sort by newest first
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
