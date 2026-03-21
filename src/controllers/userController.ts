@@ -89,3 +89,45 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.user;
+    if (!user) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+    res.json({ 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        email: user.email, 
+        role: user.role, 
+        avatar: user.avatar,
+        phone: (user as any).phone || ''
+      } 
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name, phone } = req.body;
+    const avatar = req.file ? `/uploads/avatars/${req.file.filename}` : undefined;
+
+    const updateData: any = { name };
+    if (phone) updateData.phone = phone;
+    if (avatar) updateData.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
