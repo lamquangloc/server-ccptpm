@@ -130,4 +130,6 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
-};
+};
+
+//test
