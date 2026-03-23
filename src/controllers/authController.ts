@@ -5,7 +5,7 @@ import { AuthRequest } from '../middlewares/auth';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
