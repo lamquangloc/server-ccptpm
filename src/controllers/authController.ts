@@ -52,3 +52,48 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
   // TODO: Implement forgot password logic (send email, etc.)
   res.json({ message: 'Forgot password functionality to be implemented' });
 };
+
+export const googleLogin = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      res.status(400).json({ message: 'No token provided' });
+      return;
+    }
+
+    const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      res.status(400).json({ message: 'Invalid Google token' });
+      return;
+    }
+
+    const userInfo = await response.json() as any;
+    const email = userInfo.email;
+    const name = userInfo.name;
+
+    if (!email) {
+      res.status(400).json({ message: 'Google account has no email' });
+      return;
+    }
+
+    let user = await User.findOne({ email });
+    if (!user) {
+      user = new User({ 
+        name: name || 'Google User', 
+        email, 
+        password: Math.random().toString(36).slice(-10) + 'A1!', 
+        role: 'user' 
+      });
+      await user.save();
+    }
+
+    const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1d' });
+
+    res.json({ message: 'Google login successful', token: jwtToken, user: { id: user._id, name: user.name, email, role: user.role } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error during Google login', error });
+  }
+};
