@@ -27,7 +27,3 @@ Thumbs.db
 .env
 .env.test
 .env.production
-
-# Thư mục hình ảnh upload của người dùng không nên đưa lên git
-uploads/
-src/uploads/

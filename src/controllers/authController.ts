@@ -13,12 +13,17 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const user = new User({ name, email, password, role, phone });
+    const userDetails: any = { name, email, password, role };
+    if (req.file) {
+      userDetails.avatar = `/uploads/avatars/${req.file.filename}`;
+    }
+
+    const user = new User(userDetails);
     await user.save();
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1d' });
 
-    res.status(201).json({ message: 'User registered successfully', token, user: { id: user._id, name, email, role } });
+    res.status(201).json({ message: 'User registered successfully', token, user: { id: user._id, name, email, role, avatar: user.avatar } });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -42,7 +47,35 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'default_secret', { expiresIn: '1d' });
 
-    res.json({ message: 'Login successful', token, user: { id: user._id, name: user.name, email, role: user.role } });
+    res.json({ message: 'Login successful', token, user: { id: user._id, name: user.name, email, role: user.role, avatar: user.avatar } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export const getProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const user = req.user;
+    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, avatar: user.avatar } });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};
+
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { name } = req.body;
+    const avatar = req.file ? `/uploads/avatars/${req.file.filename}` : undefined;
+
+    const updateData: any = { name };
+    if (avatar) updateData.avatar = avatar;
+
+    const user = await User.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    res.json({ message: 'Profile updated successfully', user });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
