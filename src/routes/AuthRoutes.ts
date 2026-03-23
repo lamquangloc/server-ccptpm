@@ -5,7 +5,7 @@ import { uploadAvatar } from '../middlewares/upload';
 
 const router = express.Router();
 
-router.post('/register', register);
+router.post('/register', uploadAvatar, register);
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.get('/profile', authenticateToken, getProfile);

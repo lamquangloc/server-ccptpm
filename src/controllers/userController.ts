@@ -60,10 +60,19 @@ export const getUserById = async (req: AuthRequest, res: Response): Promise<void
 
 export const updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    console.log("updateUser called - req.body:", req.body);
+    console.log("updateUser called - req.file:", req.file);
+
     const { name, email, role, phone } = req.body;
+    
+    const updateData: any = { name, email, role, phone };
+    if (req.file) {
+      updateData.avatar = `/uploads/avatars/${req.file.filename}`;
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id, 
-      { name, email, role, phone }, 
+      updateData, 
       { new: true, runValidators: true }
     ).select('-password');
     
