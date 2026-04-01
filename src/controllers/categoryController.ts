@@ -27,7 +27,9 @@ export const getCategoryById = async (req: AuthRequest, res: Response): Promise<
 export const createCategory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? `/${req.file.path.replace(/\\/g, '/').replace(/^\/+/, '')}`
+      : undefined;
     const category = new Category({ name, description, image });
     await category.save();
     res.status(201).json(category);
@@ -39,7 +41,9 @@ export const createCategory = async (req: AuthRequest, res: Response): Promise<v
 export const updateCategory = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? `/${req.file.path.replace(/\\/g, '/').replace(/^\/+/, '')}`
+      : undefined;
 
     const updateData: any = { name, description };
     if (image) updateData.image = image;
