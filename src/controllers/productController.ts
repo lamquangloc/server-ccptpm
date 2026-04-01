@@ -28,7 +28,9 @@ export const getProductById = async (req: AuthRequest, res: Response): Promise<v
 export const createProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description, price, categories } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? `/${req.file.path.replace(/\\/g, '/').replace(/^\/+/, '')}`
+      : undefined;
     const product = new Product({ name, description, price, image, categories });
     await product.save();
 
@@ -46,7 +48,9 @@ export const createProduct = async (req: AuthRequest, res: Response): Promise<vo
 export const updateProduct = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, description, price, categories } = req.body;
-    const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+    const image = req.file
+      ? `/${req.file.path.replace(/\\/g, '/').replace(/^\/+/, '')}`
+      : undefined;
 
     const updateData: any = { name, description, price, categories };
     if (image) updateData.image = image;

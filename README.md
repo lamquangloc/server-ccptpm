@@ -10,7 +10,7 @@ Quy ước đặt tên branch: `feat/<tên-viết-tắt>-<nghiệp-vụ>`.
 
 | STT | Thành viên | Vai trò | Phân công công việc (Backend & API) | Tên Branch Đề Xuất |
 |:---:|:---|:---|:---|:---|
-| 1 | **Lâm Quang Lộc** | Nhóm trưởng | Trang menu, Trang chi tiết món (Products) | `feat/loc-menu-product, main, develop` |
+| 1 | **Lâm Quang Lộc** | Nhóm trưởng | Trang menu, Trang chi tiết món (Products), Trang quản lý món ăn, Trang quản lý danh mục | `feat/loc-menu-product, main, develop` |
 | 2 | **Nguyễn Hữu Tịnh** | Thành viên | Quản lý người dùng (Users) | `feat/tinh-manage-users` |
 | 3 | **Đào Nhật Cường** | Thành viên | Đăng nhập, đăng kí, quên mật khẩu, dashboard admin (Auth) | `feat/cuong-auth-dashboard` |
 | 4 | **Hoàng Gia Bảo** | Thành viên | Quản lý bàn (Tables) | `feat/bao-manage-tables` |
