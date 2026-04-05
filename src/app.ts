@@ -9,6 +9,7 @@ import categoryRoutes from './routes/CategoryRoutes';
 import tableRoutes from './routes/TableRoutes';
 import orderRoutes from './routes/OrderRoutes';
 import dashboardRoutes from './routes/DashboardRoutes';
+import bookingRoutes from './routes/BookingRoutes';
 dotenv.config();
 
 const app = express();
@@ -27,6 +28,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/bookings', bookingRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
