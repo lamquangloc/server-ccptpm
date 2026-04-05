@@ -3,71 +3,92 @@ import User from '../models/User';
 import Product from '../models/Product';
 import Order from '../models/Order';
 import Category from '../models/Category';
+import Table from '../models/Table';
 
 export const getDashboardStats = async (req: Request, res: Response): Promise<void> => {
   try {
-    const [userCount, productCount, orderCount, categoryCount] = await Promise.all([
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const firstDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+    const [userCount, productCount, orderCount, categoryCount, completedOrders] = await Promise.all([
       User.countDocuments(),
       Product.countDocuments(),
       Order.countDocuments(),
-      Category.countDocuments()
+      Category.countDocuments(),
+      Order.find({ status: 'complete' }).populate('user', 'name avatar')
     ]);
 
-    const orders = await Order.find().populate('user', 'name');
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    // Calculate total revenue from all completed orders
+    const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
 
-    const userSales = orders.reduce((acc, order) => {
-      const uid = order.user?._id?.toString() || 'unknown';
-      if (!acc[uid]) {
-        acc[uid] = { name: (order.user as any)?.name || 'Unknown', tables: 0, sales: 0, tips: 0 };
+    // Calculate revenue this month vs previous month for changes
+    const ordersThisMonth = await Order.find({ status: 'complete', createdAt: { $gte: firstDayOfMonth } });
+    const ordersPrevMonth = await Order.find({ status: 'complete', createdAt: { $gte: firstDayOfPrevMonth, $lt: firstDayOfMonth } });
+    
+    const revenueThisMonth = ordersThisMonth.reduce((sum, o) => sum + (o.total || 0), 0);
+    const revenuePrevMonth = ordersPrevMonth.reduce((sum, o) => sum + (o.total || 0), 0);
+    
+    let revenueChange = '0';
+    if (revenuePrevMonth > 0) {
+      revenueChange = ((revenueThisMonth - revenuePrevMonth) / revenuePrevMonth * 100).toFixed(1);
+    } else if (revenueThisMonth > 0) {
+      revenueChange = '100'; // If no revenue last month but some this month, it's 100% growth
+    }
+
+    // 1. Staff Performance
+    const userSales = completedOrders.reduce((acc, order) => {
+      if (order.user) {
+        const uid = (order.user as any)?._id?.toString() || 'unknown';
+        if (!acc[uid]) {
+          acc[uid] = { 
+            name: (order.user as any)?.name || 'Unknown', 
+            tables: 0, 
+            sales: 0, 
+            avatar: (order.user as any)?.name || 'default'
+          };
+        }
+        acc[uid].tables += 1;
+        acc[uid].sales += order.total || 0;
       }
-      acc[uid].tables += 1;
-      acc[uid].sales += order.total || 0;
-      acc[uid].tips += (order.total || 0) * 0.15; 
       return acc;
     }, {} as Record<string, any>);
 
     const staffData = Object.values(userSales).map(s => ({
       name: s.name,
       tables: s.tables,
-      sales: `$${s.sales.toFixed(2)}`,
-      tips: `$${s.tips.toFixed(2)}`,
-      avatar: s.name.split(' ')[0]
+      sales: `$${s.sales.toLocaleString()}`,
+      avatar: s.avatar
     }));
 
-    if (staffData.length === 0) {
-      staffData.push(
-        { name: 'Sarah J.', tables: 42, sales: '$3,240', tips: '$580', avatar: 'Sarah' },
-        { name: 'Michael C.', tables: 38, sales: '$2,890', tips: '$495', avatar: 'Michael' }
-      );
-    }
-
-    const products = await Product.find().limit(3);
-    const inventoryItems = products.map((p, i) => ({
-      name: p.name,
-      status: i === 0 ? 'critical' : 'low',
-      statusText: i === 0 ? 'Critical: 3 units left' : 'Low: 6 remaining',
-      emoji: i === 0 ? '🥩' : (i === 1 ? '🍷' : '🥛'),
-      color: i === 0 ? 'text-red-500' : 'text-orange-500'
+    // 2. Available Tables (Real data from Table model)
+    const availableTablesFromDB = await Table.find({ status: 'available' }).sort({ number: 1 });
+    const availableTables = availableTablesFromDB.map(t => ({
+      name: `Table ${t.number}`,
+      status: 'available',
+      statusText: `Available (Cap: ${t.capacity})`,
+      emoji: '🪑',
+      color: 'text-green-500'
     }));
-    
-    if (inventoryItems.length === 0) {
-      inventoryItems.push({ name: 'Premium Ribeye', status: 'critical', statusText: 'Critical: Only 3 units left', emoji: '🥩', color: 'text-red-500' });
-    }
 
+    // 3. Stat Cards
     const statCards = [
       {
         label: 'Total Revenue',
         value: `$${totalRevenue.toLocaleString()}`,
-        change: '+5.0%',
-        positive: true,
+        change: `${parseFloat(revenueChange) >= 0 ? '+' : ''}${revenueChange}%`,
+        positive: parseFloat(revenueChange) >= 0,
         iconBg: 'bg-green-50',
         id: 'revenue'
       },
       {
         label: 'Total Orders',
         value: `${orderCount}`,
-        change: '+12',
+        change: 'Real',
         positive: true,
         iconBg: 'bg-blue-50',
         id: 'orders'
@@ -75,7 +96,7 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
       {
         label: 'Total Products',
         value: `${productCount}`,
-        change: `0`,
+        change: `Total`,
         positive: true,
         iconBg: 'bg-orange-50',
         id: 'products'
@@ -83,43 +104,90 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
       {
         label: 'Staff Count',
         value: `${userCount}`,
-        change: '+1',
+        change: 'Online',
         positive: true,
         iconBg: 'bg-purple-50',
         id: 'staff'
       },
     ];
 
-    const peakHoursData = [
-      { hour: '11am', today: 12, yesterday: 15 },
-      { hour: '12pm', today: 28, yesterday: 22 },
-      { hour: '1pm', today: orderCount > 0 ? 10 + Math.floor(orderCount/2) : 72, yesterday: 45 },
-      { hour: '2pm', today: 35, yesterday: 58 },
-      { hour: '3pm', today: 18, yesterday: 20 },
-      { hour: '4pm', today: 22, yesterday: 18 },
-      { hour: '5pm', today: 40, yesterday: 42 },
-      { hour: '6pm', today: 80, yesterday: 90 },
-      { hour: '7pm', today: 95, yesterday: 88 },
-      { hour: '8pm', today: 85, yesterday: 75 },
-      { hour: '9pm', today: 30, yesterday: 35 },
-      { hour: '10pm', today: 14, yesterday: 18 },
-    ];
+    // 4. Peak Hours Data
+    const hours = ['11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm'];
+    const hourMapping: any = {
+      11: '11am', 12: '12pm', 13: '1pm', 14: '2pm', 15: '3pm', 16: '4pm', 17: '5pm', 18: '6pm', 19: '7pm', 20: '8pm', 21: '9pm', 22: '10pm'
+    };
 
-    const donutSlices = [
-      { label: 'Bev', pct: 40, color: '#1e293b' },
-      { label: 'Food', pct: 45, color: '#334155' },
-      { label: 'Other', pct: 15, color: '#cbd5e1' },
-    ];
+    const peakHoursData = hours.map(h => ({ hour: h, today: 0, yesterday: 0 }));
+    
+    const ordersToday = await Order.find({ createdAt: { $gte: today } });
+    const ordersYesterday = await Order.find({ createdAt: { $gte: yesterday, $lt: today } });
+
+    ordersToday.forEach(o => {
+      const h = o.createdAt.getHours();
+      const hLabel = hourMapping[h];
+      const entry = peakHoursData.find(d => d.hour === hLabel);
+      if (entry) entry.today++;
+    });
+
+    ordersYesterday.forEach(o => {
+      const h = o.createdAt.getHours();
+      const hLabel = hourMapping[h];
+      const entry = peakHoursData.find(d => d.hour === hLabel);
+      if (entry) entry.yesterday++;
+    });
+
+    // 5. Donut Slices (Sales by Category)
+    const categorySales = await Order.aggregate([
+      { $match: { status: 'complete' } },
+      { $unwind: '$products' },
+      { $lookup: { from: 'products', localField: 'products.product', foreignField: '_id', as: 'productDetails' } },
+      { $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } },
+      // Use an 'Other' ObjectID as fallback for categories
+      { $addFields: { 
+          categoryIds: { 
+            $cond: {
+              if: { $or: [{ $eq: ["$productDetails", null] }, { $not: ["$productDetails.categories"] }, { $eq: [{ $size: { $ifNull: ["$productDetails.categories", []] } }, 0] }] },
+              then: [null], // We'll handle null as 'Other'
+              else: "$productDetails.categories"
+            }
+          } 
+      } },
+      { $unwind: '$categoryIds' },
+      { $group: { 
+          _id: '$categoryIds', 
+          totalSales: { $sum: { $ifNull: ['$productDetails.price', 0] } } // Approximation, or better: use a fraction of order total if possible
+      } },
+      { $lookup: { from: 'categories', localField: '_id', foreignField: '_id', as: 'categoryDetails' } },
+      { $unwind: { path: '$categoryDetails', preserveNullAndEmptyArrays: true } },
+      { $project: { name: { $ifNull: ['$categoryDetails.name', 'Other'] }, totalSales: 1 } },
+      { $match: { totalSales: { $gt: 0 } } }
+    ]);
+
+    const totalCategorySales = categorySales.reduce((sum, c) => sum + c.totalSales, 0);
+    let donutSlices = categorySales.map((c, i) => {
+        const colors = ['#1e293b', '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'];
+        return {
+            label: c.name,
+            pct: totalCategorySales > 0 ? Math.round((c.totalSales / totalCategorySales) * 100) : 0,
+            color: colors[i % colors.length]
+        };
+    });
+
+    // If still empty but we have revenue, show one big 'Other' slice
+    if (donutSlices.length === 0 && totalRevenue > 0) {
+      donutSlices = [{ label: 'Other', pct: 100, color: '#1e293b' }];
+    }
 
     res.json({
       statCards,
       staffData,
-      inventoryItems,
+      availableTables,
       peakHoursData,
       donutSlices,
       totalRevenue
     });
   } catch (error) {
+    console.error('Dashboard Stats Error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
