@@ -1,0 +1,19 @@
+# Dependencies cài ở local, không cần copy vào image
+node_modules
+
+# Kết quả build local, image sẽ tự build trong container
+dist
+
+# Metadata Git không cần trong build context
+.git
+.gitignore
+
+# Tránh đưa secret vào image build context
+.env
+
+# Log cục bộ
+npm-debug.log
+
+# Không cần lồng Dockerfile/compose khi build image app
+Dockerfile*
+docker-compose*.yml

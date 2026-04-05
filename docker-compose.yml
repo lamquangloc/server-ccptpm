@@ -1,0 +1,24 @@
+# Docker Compose cho môi trường dùng MongoDB Atlas: chỉ chạy Server API
+services:
+  # Backend API Node.js/TypeScript
+  server:
+    # Build từ Dockerfile trong thư mục hiện tại
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ccvmtptpm-server
+    restart: unless-stopped
+    # Nạp toàn bộ biến môi trường từ file .env (bao gồm MONGODB_URI Atlas)
+    env_file:
+      - .env
+    ports:
+      # API sẽ chạy tại http://localhost:5000
+      - "5000:5000"
+    environment:
+      # Chạy môi trường production theo Dockerfile runtime stage
+      - NODE_ENV=production
+      # Có thể override nhanh tại compose nếu cần
+      # - PORT=5000
+    volumes:
+      # Giữ ảnh upload không mất khi recreate container
+      - ./uploads:/app/uploads
