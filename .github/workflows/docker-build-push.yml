@@ -1,0 +1,62 @@
+name: Build and Push Server Docker Image
+
+on:
+  # Tự chạy khi push lên các nhánh chính
+  push:
+    branches:
+      - main
+      - develop
+  # Cho phép chạy tay trong tab Actions
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Đổi tên image nếu muốn (vd: api-server)
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/server-ccptpm
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Lấy source code từ repository
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # Bật Buildx để build đa kiến trúc và cache tốt hơn
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Đăng nhập Docker Hub bằng secrets
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Tạo metadata/tags tự động cho image
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            # latest chỉ gán khi build từ nhánh mặc định
+            type=raw,value=latest,enable={{is_default_branch}}
+            # luôn gắn thêm tag theo commit SHA để truy vết
+            type=sha
+
+      # Build và push image server lên Docker Hub
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Cache giúp workflow chạy nhanh hơn ở các lần sau
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

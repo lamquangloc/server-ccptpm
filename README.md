@@ -131,6 +131,48 @@ server-ccptpm/
 3. Chạy development server: `npm run dev`
 4. Build production: `npm run build` rồi `npm start`
 
+## Chạy Server bằng Docker
+
+### File Docker đã thêm
+- `Dockerfile`: Multi-stage build (deps -> build -> runtime) để tối ưu image.
+- `.dockerignore`: Loại bỏ file không cần thiết khỏi build context.
+- `docker-compose.yml`: Chạy service `server` dùng MongoDB Atlas từ `.env`.
+
+### Yêu cầu trước khi chạy
+- Docker Desktop đã chạy.
+- `.env` có các biến tối thiểu:
+  - `MONGODB_URI` (Atlas connection string)
+  - `JWT_SECRET`
+  - `PORT=5000`
+  - `CLIENT_URL=http://localhost:3000`
+
+### Lệnh chạy
+1. Build và chạy container:
+  ```bash
+  docker compose up --build -d
+  ```
+2. Kiểm tra trạng thái:
+  ```bash
+  docker compose ps
+  ```
+3. Xem log server:
+  ```bash
+  docker compose logs -f server
+  ```
+4. Health check:
+  - `http://localhost:5000/api/health`
+
+### Lỗi thường gặp
+- `Conflict. The container name "/ccvmtptpm-server" is already in use`:
+  ```bash
+  docker rm -f ccvmtptpm-server
+  docker compose up --build -d
+  ```
+- Kết nối Atlas thất bại:
+  - Kiểm tra `MONGODB_URI` đúng.
+  - Kiểm tra IP whitelist trong MongoDB Atlas Network Access.
+  - Kiểm tra Database user/password trên Atlas.
+
 ## API Endpoints
 
 ### Authentication
