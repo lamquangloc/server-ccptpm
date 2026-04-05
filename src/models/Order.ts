@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IOrder extends Document {
   user?: mongoose.Types.ObjectId;
   customerName?: string;
+  guests?: number;
   table: mongoose.Types.ObjectId;
   products: {
     product: mongoose.Types.ObjectId;
@@ -18,6 +19,7 @@ export interface IOrder extends Document {
 const OrderSchema: Schema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   customerName: { type: String, required: false },
+  guests: { type: Number, required: false, min: 1, default: 2 },
   table: { type: Schema.Types.ObjectId, ref: 'Table', required: true },
   products: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },

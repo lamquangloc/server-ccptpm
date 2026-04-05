@@ -4,10 +4,16 @@ import Table from '../models/Table';
 import Product from '../models/Product';
 import { AuthRequest } from '../middlewares/auth';
 
+const normalizeGuestsForResponse = (order: any) => {
+  if (order?.guests && Number(order.guests) > 0) return order;
+  const fallbackGuests = Number(order?.table?.capacity) > 0 ? Number(order.table.capacity) : 2;
+  return { ...order, guests: fallbackGuests };
+};
+
 export const getAllOrders = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const orders = await Order.find().populate('user').populate('table').populate('products.product');
-    res.json(orders);
+    res.json(orders.map((order) => normalizeGuestsForResponse(order.toObject())));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -20,7 +26,7 @@ export const getOrderById = async (req: AuthRequest, res: Response): Promise<voi
       res.status(404).json({ message: 'Order not found' });
       return;
     }
-    res.json(order);
+    res.json(normalizeGuestsForResponse(order.toObject()));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -36,7 +42,7 @@ export const getUserOrders = async (req: AuthRequest, res: Response): Promise<vo
       .populate('table')
       .populate('products.product')
       .sort({ createdAt: -1 }); // Sort by newest first
-    res.json(orders);
+    res.json(orders.map((order) => normalizeGuestsForResponse(order.toObject())));
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
@@ -44,8 +50,14 @@ export const getUserOrders = async (req: AuthRequest, res: Response): Promise<vo
 
 export const createOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { table, products, phone, customerName } = req.body;
+    const { table, products, phone, customerName, guests } = req.body;
     const userId = req.user?._id;
+
+    const tableDoc = await Table.findById(table);
+    if (!tableDoc) {
+      res.status(404).json({ message: 'Table not found' });
+      return;
+    }
 
     // Calculate total based on actual product prices
     let total = 0;
@@ -58,6 +70,11 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       total += product.price * item.quantity;
     }
 
+    const normalizedGuests = Number(guests);
+
+    const fallbackGuests = Number((tableDoc as any).capacity) > 0 ? Number((tableDoc as any).capacity) : 2;
+    const finalGuests = Number.isFinite(normalizedGuests) && normalizedGuests > 0 ? normalizedGuests : fallbackGuests;
+
     const order = new Order({
       user: userId || undefined,
       customerName: customerName || undefined,
@@ -65,6 +82,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
       products,
       total,
       phone: phone || undefined,
+      guests: finalGuests,
     });
     await order.save();
 
@@ -107,7 +125,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response): Promis
 
 export const updateOrder = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { table, products, phone, customerName, status } = req.body;
+    const { table, products, phone, customerName, status, guests } = req.body;
     
     // Calculate total based on actual product prices
     let total = 0;
@@ -128,6 +146,15 @@ export const updateOrder = async (req: AuthRequest, res: Response): Promise<void
     if (total > 0) updateFields.total = total;
     if (phone !== undefined) updateFields.phone = phone;
     if (customerName !== undefined) updateFields.customerName = customerName;
+    if (guests !== undefined) {
+      const normalizedGuests = Number(guests);
+      if (Number.isFinite(normalizedGuests) && normalizedGuests > 0) {
+        updateFields.guests = normalizedGuests;
+      } else {
+        res.status(400).json({ message: 'Guests must be a positive number' });
+        return;
+      }
+    }
     if (status) updateFields.status = status;
 
     const order = await Order.findByIdAndUpdate(req.params.id, updateFields, { new: true }).populate(['table', 'products.product']);
