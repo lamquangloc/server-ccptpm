@@ -38,3 +38,19 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
   }
   next();
 };
+
+// Middleware tùy chọn: gắn user nếu có token, không bắt buộc
+export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default_secret') as any;
+      const user = await User.findById(decoded.id);
+      if (user) req.user = user;
+    }
+  } catch {
+    // token không hợp lệ → bỏ qua, tiếp tục không có user
+  }
+  next();
+};

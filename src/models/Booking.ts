@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IBooking extends Document {
+  userId?: mongoose.Types.ObjectId;
   name: string;
   phone: string;
   date: string; // YYYY-MM-DD
@@ -13,6 +14,7 @@ export interface IBooking extends Document {
 }
 
 const BookingSchema: Schema = new Schema({
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
   name: { type: String, required: true },
   phone: { type: String, required: true },
   date: { type: String, required: true },
