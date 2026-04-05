@@ -1,13 +1,14 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOrder extends Document {
-  user: mongoose.Types.ObjectId;
+  user?: mongoose.Types.ObjectId;
+  customerName?: string;
   table: mongoose.Types.ObjectId;
   products: {
     product: mongoose.Types.ObjectId;
     quantity: number;
   }[];
-  phone: string;
+  phone?: string;
   total: number;
   status: 'pending' | 'confirm' | 'cancel' | 'complete';
   createdAt: Date;
@@ -15,13 +16,14 @@ export interface IOrder extends Document {
 }
 
 const OrderSchema: Schema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  user: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+  customerName: { type: String, required: false },
   table: { type: Schema.Types.ObjectId, ref: 'Table', required: true },
   products: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },
   }],
-  phone: { type: String, required: true },
+  phone: { type: String, required: false },
   total: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'confirm', 'cancel', 'complete'], default: 'pending' },
 }, {
