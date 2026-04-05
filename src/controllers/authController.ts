@@ -202,3 +202,38 @@ export const googleLogin = async (req: Request, res: Response): Promise<void> =>
     res.status(500).json({ message: 'Server error during Google login', error });
   }
 };
+
+export const changePassword = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: 'Vui lòng nhập đầy đủ thông tin.' });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
+      return;
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      res.status(404).json({ message: 'Không tìm thấy người dùng.' });
+      return;
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      res.status(400).json({ message: 'Mật khẩu hiện tại không chính xác.' });
+      return;
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ message: 'Đổi mật khẩu thành công!' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server. Vui lòng thử lại.' });
+  }
+};

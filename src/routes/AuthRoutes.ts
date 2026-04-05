@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, forgotPassword, resetPassword, googleLogin } from '../controllers/authController';
+import { register, login, forgotPassword, resetPassword, googleLogin, changePassword } from '../controllers/authController';
 import { getProfile, updateProfile } from '../controllers/userController';
 import { authenticateToken } from '../middlewares/auth';
 import { uploadAvatar } from '../middlewares/upload';
@@ -13,5 +13,6 @@ router.put('/reset-password/:token', resetPassword);
 router.post('/google', googleLogin);
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, uploadAvatar, updateProfile);
+router.put('/change-password', authenticateToken, changePassword);
 
 export default router;
