@@ -14,7 +14,7 @@ permissions:
 
 env:
   # Đổi tên image nếu muốn (vd: api-server)
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/server-ccptpm
+  IMAGE_NAME: ${{ secrets. }}/server-ccptpm
 
 jobs:
   docker:
