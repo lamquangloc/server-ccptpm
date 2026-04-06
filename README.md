@@ -3,6 +3,39 @@
 ## Tổng quan
 Phần backend của dự án nhà hàng đặt bàn sử dụng TypeScript, Express.js, và MongoDB Atlas. Phần database bao gồm các collection chính sau.
 
+## 2.2.4. Mô tả module: Frontend/Backend/Database
+
+### Frontend Module
+- **Vị trí**: thư mục `client-ccptpm/` (project client tách riêng).
+- **Công nghệ chính**: React + TypeScript + Vite + Tailwind CSS + React Router.
+- **Nhiệm vụ**:
+  - Cung cấp giao diện người dùng (menu, chi tiết món, đặt bàn, hồ sơ).
+  - Cung cấp giao diện quản trị (users, products, categories, orders, tables, dashboard).
+  - Gọi API backend qua các service trong `src/services/`.
+
+### Backend Module
+- **Vị trí**: thư mục `server-ccptpm/src/`.
+- **Công nghệ chính**: Node.js + Express + TypeScript + JWT + Multer.
+- **Nhiệm vụ**:
+  - Cung cấp REST API cho xác thực, người dùng, sản phẩm, danh mục, bàn, đặt bàn, đơn hàng.
+  - Xử lý nghiệp vụ tại `controllers/`, định nghĩa endpoint tại `routes/`.
+  - Quản lý middleware xác thực và upload ảnh tại `middlewares/`.
+  - Phục vụ tài nguyên upload tĩnh qua thư mục `uploads/`.
+
+### Database Module
+- **Hệ quản trị**: MongoDB Atlas (kết nối bằng Mongoose).
+- **Vị trí cấu hình**: `src/config/database.ts`.
+- **Nhiệm vụ**:
+  - Lưu trữ dữ liệu nghiệp vụ theo mô hình document.
+  - Quản lý các collection chính: `User`, `Product`, `Category`, `Table`, `Booking`, `Order`.
+  - Đảm bảo liên kết dữ liệu qua các trường tham chiếu ObjectId giữa các collection.
+
+### Luồng tương tác giữa các module
+1. Người dùng thao tác trên Frontend.
+2. Frontend gửi request HTTP đến Backend API.
+3. Backend xác thực, xử lý nghiệp vụ, truy vấn Database.
+4. Backend trả dữ liệu về Frontend để hiển thị.
+
 ## Phân công công việc & Danh sách Branch
 Dưới đây là bảng phân công nhiệm vụ và tên nhánh dự kiến cho mỗi thành viên của nhóm 7 người. Các nhánh sẽ được tạo checkout từ nhánh `develop`.
 
@@ -21,38 +54,54 @@ Quy ước đặt tên branch: `feat/<tên-viết-tắt>-<nghiệp-vụ>`.
 ## Cấu trúc Project
 ```
 server-ccptpm/
+├── .github/
+│   └── workflows/
+│       └── docker-build-push.yml
 ├── src/
 │   ├── config/
 │   │   └── database.ts          # Kết nối MongoDB
 │   ├── controllers/             # Logic xử lý API
-│   │   ├── AuthController.ts
-│   │   ├── UserController.ts
-│   │   ├── ProductController.ts
-│   │   ├── CategoryController.ts
-│   │   ├── TableController.ts
-│   │   └── OrderController.ts
+│   │   ├── authController.ts
+│   │   ├── bookingController.ts
+│   │   ├── categoryController.ts
+│   │   ├── dashboardController.ts
+│   │   ├── orderController.ts
+│   │   ├── productController.ts
+│   │   ├── tableController.ts
+│   │   └── userController.ts
 │   ├── middlewares/
-│   │   └── auth.ts              # JWT authentication middleware
+│   │   ├── auth.ts              # JWT authentication middleware
+│   │   └── upload.ts
 │   ├── models/                  # Mongoose schemas
-│   │   ├── User.ts
-│   │   ├── Product.ts
+│   │   ├── Booking.ts
 │   │   ├── Category.ts
+│   │   ├── Order.ts
+│   │   ├── Product.ts
 │   │   ├── Table.ts
-│   │   └── Order.ts
+│   │   └── User.ts
 │   ├── routes/                  # API routes
+│   │   ├── auth.ts
 │   │   ├── AuthRoutes.ts
-│   │   ├── UserRoutes.ts
-│   │   ├── ProductRoutes.ts
+│   │   ├── BookingRoutes.ts
 │   │   ├── CategoryRoutes.ts
+│   │   ├── DashboardRoutes.ts
+│   │   ├── OrderRoutes.ts
+│   │   ├── ProductRoutes.ts
 │   │   ├── TableRoutes.ts
-│   │   └── OrderRoutes.ts
+│   │   ├── UserRoutes.ts
 │   ├── utils/                   # Helper functions
+│   │   ├── emailTemplates.ts
+│   │   ├── seedData.ts
+│   │   ├── seedTestOrder.ts
+│   │   └── sendEmail.ts
 │   └── app.ts                   # Main Express app
-├── public/                      # Static files
 ├── uploads/                     # Uploaded images
 │   ├── avatars/                 # User avatar images
 │   ├── products/                # Product images
 │   └── categories/              # Category images
+├── .dockerignore
+├── docker-compose.yml
+├── Dockerfile
 ├── .env                         # Environment variables
 ├── package.json
 ├── tsconfig.json
